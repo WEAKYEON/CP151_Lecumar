@@ -3,13 +3,23 @@ from django.db import models
 from django.db.models import Sum
 from django.shortcuts import reverse
 from django_countries.fields import CountryField
+from django.utils import timezone
 
-# Create your models here.
+default=timezone.now
+
+BRAND_CHOICES = (
+    ('LG', 'Logitech'), 
+    ('HX', 'HyperX'), 
+    ('RZ', 'Razer'), 
+    ('DR', 'Dareu')
+)
+
+
 CATEGORY_CHOICES = (
-    ('SB', 'Shirts And Blouses'),
-    ('TS', 'T-Shirts'),
-    ('SK', 'Skirts'),
-    ('HS', 'Hoodies&Sweatshirts')
+    ('KB', 'Keyboard'), 
+    ('M', 'Mouse'), 
+    ('MP', 'Microphone'), 
+    ('HP', 'Headphone')
 )
 
 LABEL_CHOICES = (
@@ -34,6 +44,14 @@ class Slide(models.Model):
     def __str__(self):
         return "{} - {}".format(self.caption1, self.caption2)
 
+class Brand(models.Model):
+    name = models.CharField(max_length=200)
+    country = models.CharField(max_length=200, blank=True, null=True)
+    email = models.EmailField(max_length=200, blank=True, null=True)
+    
+    def __str__(self):
+        return self.name
+    
 class Category(models.Model):
     title = models.CharField(max_length=100)
     slug = models.SlugField()
@@ -51,35 +69,34 @@ class Category(models.Model):
 
 
 class Item(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='items', null=True)
     title = models.CharField(max_length=100)
     price = models.FloatField()
     discount_price = models.FloatField(blank=True, null=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    label = models.CharField(choices=LABEL_CHOICES, max_length=1)
-    slug = models.SlugField()
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='items')
+    label = models.CharField(max_length=1, choices=[('N', 'New'), ('S', 'Sale'), ('P', 'Promotion'),
+                                                    ('D', 'Default')])
+    slug = models.SlugField(unique=True)
     stock_no = models.CharField(max_length=10)
     description_short = models.CharField(max_length=50)
     description_long = models.TextField()
     image = models.ImageField()
+    subimage_1 = models.ImageField(null=True)
+    subimage_2 = models.ImageField(null=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.title
+        return f"{self.brand} - {self.category}"
 
     def get_absolute_url(self):
-        return reverse("core:product", kwargs={
-            'slug': self.slug
-        })
+        return reverse("core:product", kwargs={'slug': self.slug})
 
     def get_add_to_cart_url(self):
-        return reverse("core:add-to-cart", kwargs={
-            'slug': self.slug
-        })
+        return reverse("core:add-to-cart", kwargs={'slug': self.slug})
 
     def get_remove_from_cart_url(self):
-        return reverse("core:remove-from-cart", kwargs={
-            'slug': self.slug
-        })
+        return reverse("core:remove-from-cart", kwargs={'slug': self.slug})
 
 
 class OrderItem(models.Model):
@@ -116,9 +133,11 @@ class Order(models.Model):
     ordered_date = models.DateTimeField()
     ordered = models.BooleanField(default=False)
     shipping_address = models.ForeignKey(
-        'BillingAddress', related_name='shipping_address', on_delete=models.SET_NULL, blank=True, null=True)
+        'BillingAddress', related_name='shipping_address', on_delete=models.SET_NULL, 
+        blank=True, null=True)
     billing_address = models.ForeignKey(
-        'BillingAddress', related_name='billing_address', on_delete=models.SET_NULL, blank=True, null=True)
+        'BillingAddress', related_name='billing_address', on_delete=models.SET_NULL, 
+        blank=True, null=True)
     payment = models.ForeignKey(
         'Payment', on_delete=models.SET_NULL, blank=True, null=True)
     coupon = models.ForeignKey(
@@ -151,8 +170,7 @@ class Order(models.Model):
 
 
 class BillingAddress(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
     street_address = models.CharField(max_length=100)
     apartment_address = models.CharField(max_length=100)
     country = CountryField(multiple=False)

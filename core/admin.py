@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Item, OrderItem, Order, Payment, Coupon, Refund, BillingAddress, Category, Slide
+from .models import Item, OrderItem, Order, Payment, Coupon, Refund, BillingAddress, Category, Slide , Brand
 
 
 # Register your models here.
@@ -86,10 +86,14 @@ class CategoryAdmin(admin.ModelAdmin):
     list_filter = ['title', 'is_active']
     search_fields = ['title', 'is_active']
     prepopulated_fields = {"slug": ("title",)}
-
+    
+class BrandAdmin(admin.ModelAdmin):
+    list_display = ('name', 'country', 'email')
+    search_fields = ('name', 'country') 
 
 admin.site.register(Item, ItemAdmin)
 admin.site.register(Category, CategoryAdmin)
+admin.site.register(Brand, BrandAdmin)
 admin.site.register(Slide)
 admin.site.register(OrderItem)
 admin.site.register(Order, OrderAdmin)

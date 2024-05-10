@@ -1,4 +1,6 @@
 import os
+import stripe
+import dj_database_url
 
 ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
 
@@ -20,6 +22,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'crispy_forms',
+    'crispy_bootstrap4',
     'django_countries',
     'core'
 ]
@@ -31,8 +34,11 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware'
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ROOT_URLCONF = 'demo.urls'
 
@@ -58,13 +64,13 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# static files (CSS, JS, Image)
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static_in_env')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'static_root')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media_root')
+
 
 DATABASES = {
     "default": {
@@ -97,9 +103,7 @@ LOGIN_REDIRECT_URL = '/'
 # Provider specific settings
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
-        # For each OAuth based provider, either add a ``SocialApp``
-        # (``socialaccount`` app) containing the required client
-        # credentials, or list them here:
+
         'APP': {
             'client_id': '123',
             'secret': '456',
@@ -108,9 +112,8 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-# CRISPY FORM
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
-STRIPE_PUBLIC_KEY = 'pk_test_lX3r6OMjOU2yzFsNSHq6belT00EY82kZmH'
-STRIPE_SECRET_KEY = 'sk_test_tn0CTDaIJHUJyAqhsf39cfsC00LNjsqDnb'
+STRIPE_PUBLIC_KEY = 'pk_test_51PBaSAHXKfaxoHgz5W7m6dAT9sbgTwPadraoOFAmXUhEmOiemVAexBr1zR6mDDLf75UB8jAmFjyMhKluaWIjiLHJ00SsEJOWZN'
+STRIPE_SECRET_KEY = 'sk_test_51PBaSAHXKfaxoHgzOzljSijY7BLxxON6dZ9zCKmXXl6W2dmd9As4ii20WXxeLgSGPW5o54VlrTOJDJKUNGAg9GCC00eqcNkmcn'

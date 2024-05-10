@@ -7,25 +7,37 @@ from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView, View
 from django.shortcuts import redirect
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from .forms import CheckoutForm, CouponForm, RefundForm
-from .models import Item, OrderItem, Order, BillingAddress, Payment, Coupon, Refund, Category
-from django.http import HttpResponseRedirect
-from django.shortcuts import render_to_response
-
+from .models import Item, OrderItem, Order, BillingAddress, Payment, Coupon, Refund, Category, Brand
+from django.http import HttpResponseRedirect, JsonResponse
 # Create your views here.
 import random
 import string
 import stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+def my_view(request):
+    categories = Category.objects.all()
+    brands = Brand.objects.all()
+    
+    return render(request, 'shop.html', {'categories': categories,'brands': brands})
 
 def create_ref_code():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=20))
 
+def filter_product(request):
+    categories = request.GET.getlist("category[]")
+    vendors = request.GET.getlist("vendor[]")
+    
+    min_price = request.GET['min_price']
+    max_price = request.GET['max_price']
+    
+    products = products.filter(price_gte=min_price)
+    products = products.filter(price_lte=max_price)
 
 class PaymentView(View):
     def get(self, *args, **kwargs):
-        # order
         order = Order.objects.get(user=self.request.user, ordered=False)
         if order.billing_address:
             context = {
@@ -44,21 +56,20 @@ class PaymentView(View):
         amount = int(order.get_total() * 100)
         try:
             charge = stripe.Charge.create(
-                amount=amount,  # cents
-                currency="usd",
-                source=token
+                amount=amount,
+                currency="thb",
+                source="tok_visa",
+                description="Charge for product or service"
             )
-            # create the payment
             payment = Payment()
             payment.stripe_charge_id = charge['id']
             payment.user = self.request.user
             payment.amount = order.get_total()
             payment.save()
 
-            # assign the payment to the order
             order.ordered = True
             order.payment = payment
-            # TODO : assign ref code
+            # TODO :  ref code
             order.ref_code = create_ref_code()
             order.save()
 
@@ -109,7 +120,14 @@ class HomeView(ListView):
     template_name = "index.html"
     queryset = Item.objects.filter(is_active=True)
     context_object_name = 'items'
+    
+class OrderView(LoginRequiredMixin, ListView):
+    model = Order
+    template_name = 'orders_view.html'
+    context_object_name = 'orders'
 
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user).order_by('-ordered_date')
 
 class OrderSummaryView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
@@ -135,9 +153,9 @@ class ItemDetailView(DetailView):
     template_name = "product-detail.html"
 
 
-# class CategoryView(DetailView):
-#     model = Category
-#     template_name = "category.html"
+class CategoryView(DetailView):
+     model = Category
+     template_name = "category.html"
 
 class CategoryView(View):
     def get(self, *args, **kwargs):
@@ -150,7 +168,17 @@ class CategoryView(View):
             'category_image': category.image
         }
         return render(self.request, "category.html", context)
-
+    
+class BrandView(View):
+    def get(self, *args, **kwargs):
+        brand = get_object_or_404(Brand, slug=self.kwargs['slug']) 
+        items = Item.objects.filter(brand=brand, is_active=True)
+        
+        context = {
+            'brand': brand,
+            'items': items,
+        }
+        return render(self.request, "brand.html", context)
 
 class CheckoutView(View):
     def get(self, *args, **kwargs):
@@ -180,9 +208,9 @@ class CheckoutView(View):
                 country = form.cleaned_data.get('country')
                 zip = form.cleaned_data.get('zip')
                 # add functionality for these fields
-                # same_shipping_address = form.cleaned_data.get(
-                #     'same_shipping_address')
-                # save_info = form.cleaned_data.get('save_info')
+                same_shipping_address = form.cleaned_data.get(
+                'same_shipping_address')
+                save_info = form.cleaned_data.get('save_info')
                 payment_option = form.cleaned_data.get('payment_option')
                 billing_address = BillingAddress(
                     user=self.request.user,
@@ -210,26 +238,25 @@ class CheckoutView(View):
             return redirect("core:order-summary")
 
 
-# def home(request):
-#     context = {
-#         'items': Item.objects.all()
-#     }
-#     return render(request, "index.html", context)
-#
-#
-# def products(request):
-#     context = {
-#         'items': Item.objects.all()
-#     }
-#     return render(request, "product-detail.html", context)
-#
-#
-# def shop(request):
-#     context = {
-#         'items': Item.objects.all()
-#     }
-#     return render(request, "shop.html", context)
+def home(request):
+    context = {
+         'items': Item.objects.all()
+         }
+    return render(request, "index.html", context)
 
+
+def products(request):
+     context = {
+         'items': Item.objects.all()
+     }
+     return render(request, "product-detail.html", context)
+
+
+def shop(request):
+     context = {
+         'items': Item.objects.all()
+     }
+     return render(request, "shop.html", context)
 
 @login_required
 def add_to_cart(request, slug):
@@ -345,7 +372,7 @@ class AddCouponView(View):
                 return redirect("core:checkout")
 
             except ObjectDoesNotExist:
-                messages.info(request, "You do not have an active order")
+                messages.info(self.request, "You do not have an active order")
                 return redirect("core:checkout")
 
 

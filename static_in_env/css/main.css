@@ -1,11 +1,4 @@
 /*------------------------------------------------------------------
-Project:  
-Version:  
-Last change:  
-Assigned to:  Le Xuan Bach
-Primary use:  Company
--------------------------------------------------------------------*/
-/*------------------------------------------------------------------
 [LAYOUT]
 
 * body
@@ -83,6 +76,7 @@ Input, textarea : 14px/1.6 '', Arial, sans-serif;
 /*[ RESTYLE TAG ]
 ///////////////////////////////////////////////////////////
 */
+
 * {
 	margin: 0px; 
 	padding: 0px; 
@@ -115,7 +109,7 @@ a:focus {
 
 a:hover {
 	text-decoration: none;
-	color: #e65540;
+	color: #0000;
 }
 
 /* ------------------------------------ */
@@ -546,8 +540,12 @@ iframe {
   display: flex;
   justify-content: center;
   align-items: center;
-}
 
+}
+.topbar-language {
+  background-color: #fff;
+  padding: 0;
+}
 
 /* ------------------------------------ */
 
@@ -644,6 +642,8 @@ iframe {
 
 /*[ Menu ]
 -----------------------------------------------------------*/
+
+
 .main_menu {
   list-style-type: none;
   margin: 0px;
@@ -1107,13 +1107,13 @@ li.sale-noti > a {
 
 .side-menu .sub-menu > li {
   padding-left: 12px;
-  padding-top: 
+  padding-top: 0;
 }
 
 .side-menu .sub-menu a:hover {
   text-decoration: none;
   padding-left: 20px;
-  color: #e65540 !important;
+  color: #0000 !important;
 }
 
 .side-menu .sub-menu {
@@ -2182,7 +2182,7 @@ li.sale-noti > a {
 }
 
 .tag-item:hover {
-  border: 1px solid #e65540;
+  border: 1px solid #0000;
 }
 
 

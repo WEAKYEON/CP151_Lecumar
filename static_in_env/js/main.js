@@ -200,5 +200,18 @@
         $('.video-mo-01').children('iframe')[0].src = srcOld;
         $('.video-mo-01').css('opacity','0');
     });
-
+    /*[ Hover Dropdown ]
+    ===========================================================*/
+    document.addEventListener('DOMContentLoaded', function () {
+        const shopLink = document.querySelector('.dropdown > a');
+    
+        shopLink.addEventListener('click', function(event) {
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+            const isVisible = dropdownMenu.style.display === 'block';
+            dropdownMenu.style.display = isVisible ? 'none' : 'block';
+            event.preventDefault();  // Prevent the link from navigating directly
+        });
+    });
+    
+    $('.dropdown-toggle').dropdown();
 })(jQuery);
